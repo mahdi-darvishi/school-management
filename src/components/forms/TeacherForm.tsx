@@ -42,9 +42,7 @@ const TeacherForm = ({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-  });
+  const onSubmit = handleSubmit((data) => {});
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
