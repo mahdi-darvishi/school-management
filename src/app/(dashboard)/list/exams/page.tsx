@@ -1,82 +1,89 @@
-import FormModal from "@/components/FormModal";
+import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
-import { ITEM_PER_PAGE } from "@/lib/setting";
-import { currentUserId, role } from "@/lib/utils";
-import { currentUser } from "@clerk/nextjs/server";
+import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Exam, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
 
 type ExamList = Exam & {
   lesson: {
     subject: Subject;
-    teacher: Teacher;
     class: Class;
+    teacher: Teacher;
   };
 };
 
-const columns = [
-  {
-    header: "Subject Name",
-    accessor: "name",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  ...(role === "admin" || role === "teacher"
-    ? [
-        {
-          header: "Actions",
-          accessor: "actions",
-        },
-      ]
-    : []),
-];
-
-const renderRow = (item: ExamList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-  >
-    <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
-    <td>{item.lesson.class.name}</td>
-    <td className="hidden md:table-cell">
-      {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
-    </td>
-    <td className="hidden md:table-cell">
-      {new Intl.DateTimeFormat("en-US").format(item.startTime)}
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {(role === "admin" || role === "teacher") && (
-          <>
-            <FormModal table="exam" type="update" data={item} />
-            <FormModal table="exam" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
 const ExamListPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const currentUserId = userId;
+
+  const columns = [
+    {
+      header: "Subject Name",
+      accessor: "name",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" || role === "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+          },
+        ]
+      : []),
+  ];
+
+  const renderRow = (item: ExamList) => (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td className="flex items-center gap-4 p-4">
+        {item.lesson.subject.name}
+      </td>
+      <td>{item.lesson.class.name}</td>
+      <td className="hidden md:table-cell">
+        {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {(role === "admin" || role === "teacher") && (
+            <>
+              <FormContainer table="exam" type="update" data={item} />
+              <FormContainer table="exam" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+
   const { page, ...queryParams } = searchParams;
+
   const p = page ? parseInt(page) : 1;
 
   // URL PARAMS CONDITION
@@ -84,7 +91,6 @@ const ExamListPage = async ({
   const query: Prisma.ExamWhereInput = {};
 
   query.lesson = {};
-
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
@@ -97,10 +103,7 @@ const ExamListPage = async ({
             break;
           case "search":
             query.lesson.subject = {
-              name: {
-                contains: value,
-                mode: "insensitive",
-              },
+              name: { contains: value, mode: "insensitive" },
             };
             break;
           default:
@@ -110,13 +113,12 @@ const ExamListPage = async ({
     }
   }
 
-  // ROOLE CONDITION
+  // ROLE CONDITIONS
 
   switch (role) {
     case "admin":
       break;
     case "teacher":
-      1;
       query.lesson.teacherId = currentUserId!;
       break;
     case "student":
@@ -137,6 +139,7 @@ const ExamListPage = async ({
         },
       };
       break;
+
     default:
       break;
   }
@@ -174,7 +177,7 @@ const ExamListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="exam" type="create" />
+              <FormContainer table="exam" type="create" />
             )}
           </div>
         </div>
@@ -182,7 +185,7 @@ const ExamListPage = async ({
       {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={data} />
       {/* PAGINATION */}
-      <Pagination count={count} page={p} />
+      <Pagination page={p} count={count} />
     </div>
   );
 };
