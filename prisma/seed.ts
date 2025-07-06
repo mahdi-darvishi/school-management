@@ -2,218 +2,260 @@ import { Day, PrismaClient, UserSex } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // ADMIN
-  await prisma.admin.create({
-    data: {
-      id: "admin1",
-      username: "admin1",
-    },
-  });
-  await prisma.admin.create({
-    data: {
-      id: "admin2",
-      username: "admin2",
-    },
-  });
-
-  // GRADE
-  for (let i = 1; i <= 6; i++) {
-    await prisma.grade.create({
-      data: {
-        level: i,
-      },
+  try {
+    console.log("⏳ Seeding admins...");
+    await prisma.admin.createMany({
+      data: [
+        { id: "admin1", username: "admin1" },
+        { id: "admin2", username: "admin2" },
+      ],
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Admins seeded.");
 
-  // CLASS
-  for (let i = 1; i <= 6; i++) {
-    await prisma.class.create({
-      data: {
-        name: `${i}A`,
-        gradeId: i,
-        capacity: Math.floor(Math.random() * (20 - 15 + 1)) + 15,
-      },
+    console.log("⏳ Seeding grades...");
+    await prisma.grade.createMany({
+      data: Array.from({ length: 6 }, (_, i) => ({ level: i + 1 })),
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Grades seeded.");
 
-  // SUBJECT
-  const subjectData = [
-    { name: "Mathematics" },
-    { name: "Science" },
-    { name: "English" },
-    { name: "History" },
-    { name: "Geography" },
-    { name: "Physics" },
-    { name: "Chemistry" },
-    { name: "Biology" },
-    { name: "Computer Science" },
-    { name: "Art" },
-  ];
-
-  for (const subject of subjectData) {
-    await prisma.subject.create({ data: subject });
-  }
-
-  // TEACHER
-  for (let i = 1; i <= 15; i++) {
-    await prisma.teacher.create({
-      data: {
-        id: `teacher${i}`, // Unique ID for the teacher
-        username: `teacher${i}`,
-        name: `TName${i}`,
-        surname: `TSurname${i}`,
-        email: `teacher${i}@example.com`,
-        phone: `123-456-789${i}`,
-        address: `Address${i}`,
-        bloodType: "A+",
-        sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        subjects: { connect: [{ id: (i % 10) + 1 }] },
-        classes: { connect: [{ id: (i % 6) + 1 }] },
-        birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 30)
-        ),
-      },
+    console.log("⏳ Seeding subjects...");
+    const subjects = [
+      "Math",
+      "Science",
+      "English",
+      "History",
+      "Geography",
+      "Physics",
+      "Chemistry",
+      "Biology",
+      "CS",
+      "Art",
+    ];
+    await prisma.subject.createMany({
+      data: subjects.map((name) => ({ name })),
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Subjects seeded.");
 
-  // LESSON
-  for (let i = 1; i <= 30; i++) {
-    await prisma.lesson.create({
-      data: {
-        name: `Lesson${i}`,
-        day: Day[
-          Object.keys(Day)[
-            Math.floor(Math.random() * Object.keys(Day).length)
-          ] as keyof typeof Day
-        ],
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 3)),
-        subjectId: (i % 10) + 1,
-        classId: (i % 6) + 1,
-        teacherId: `teacher${(i % 15) + 1}`,
-      },
+    console.log("⏳ Seeding teachers...");
+    const teachersData = Array.from({ length: 20 }, (_, i) => ({
+      id: `teacher${i + 1}`,
+      username: `teacher${i + 1}`,
+      name: `TName${i + 1}`,
+      surname: `TSurname${i + 1}`,
+      email: `teacher${i + 1}@school.com`,
+      phone: `091200000${i + 1}`,
+      address: `Teacher St ${i + 1}`,
+      bloodType: "A+",
+      sex: (i + 1) % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
+      birthday: new Date(1980 + ((i + 1) % 10), 0, 1),
+      // اینجا چون subjects و classes باید connect بشن، فعلاً جداگانه انجام میدیم پایین‌تر
+    }));
+    await prisma.teacher.createMany({
+      data: teachersData.map(
+        ({
+          id,
+          username,
+          name,
+          surname,
+          email,
+          phone,
+          address,
+          bloodType,
+          sex,
+          birthday,
+        }) => ({
+          id,
+          username,
+          name,
+          surname,
+          email,
+          phone,
+          address,
+          bloodType,
+          sex,
+          birthday,
+        })
+      ),
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Teachers seeded.");
 
-  // PARENT
-  for (let i = 1; i <= 25; i++) {
-    await prisma.parent.create({
-      data: {
-        id: `parentId${i}`,
-        username: `parentId${i}`,
-        name: `PName ${i}`,
-        surname: `PSurname ${i}`,
-        email: `parent${i}@example.com`,
-        phone: `123-456-789${i}`,
-        address: `Address${i}`,
-      },
+    console.log("⏳ Connecting teachers to subjects and classes...");
+    // برای کانکت کردن، چون createMany این کار رو نمیکنه، باید جدا انجام بدیم:
+    for (let i = 0; i < 20; i++) {
+      const teacherId = `teacher${i + 1}`;
+      await prisma.teacher.update({
+        where: { id: teacherId },
+        data: {
+          subjects: { connect: [{ id: (i % 10) + 1 }] },
+          classes: { connect: [{ id: (i % 6) + 1 }] },
+        },
+      });
+    }
+    console.log("✅ Teachers connected.");
+
+    console.log("⏳ Seeding classes...");
+    const classesData = Array.from({ length: 6 }, (_, i) => ({
+      name: `${i + 1}A`,
+      capacity: 20,
+      gradeId: i + 1,
+      supervisorId: `teacher${(i % 20) + 1}`,
+    }));
+    await prisma.class.createMany({
+      data: classesData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Classes seeded.");
 
-  // STUDENT
-  for (let i = 1; i <= 50; i++) {
-    await prisma.student.create({
-      data: {
-        id: `student${i}`,
-        username: `student${i}`,
-        name: `SName${i}`,
-        surname: `SSurname ${i}`,
-        email: `student${i}@example.com`,
-        phone: `987-654-321${i}`,
-        address: `Address${i}`,
-        bloodType: "O-",
-        sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        parentId: `parentId${Math.ceil(i / 2) % 25 || 25}`,
-        gradeId: (i % 6) + 1,
-        classId: (i % 6) + 1,
-        birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 10)
-        ),
-      },
+    console.log("⏳ Seeding lessons...");
+    const lessonsData = Array.from({ length: 60 }, (_, i) => ({
+      name: `Lesson${i + 1}`,
+      day: Day[Object.keys(Day)[(i + 1) % 5] as keyof typeof Day],
+      startTime: new Date(new Date().setHours(8 + ((i + 1) % 5), 0, 0)),
+      endTime: new Date(new Date().setHours(9 + ((i + 1) % 5), 0, 0)),
+      subjectId: ((i + 1) % 10) + 1,
+      classId: ((i + 1) % 6) + 1,
+      teacherId: `teacher${((i + 1) % 20) + 1}`,
+    }));
+    await prisma.lesson.createMany({
+      data: lessonsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Lessons seeded.");
 
-  // EXAM
-  for (let i = 1; i <= 10; i++) {
-    await prisma.exam.create({
-      data: {
-        title: `Exam ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        lessonId: (i % 30) + 1,
-      },
+    console.log("⏳ Seeding parents...");
+    const parentsData = Array.from({ length: 30 }, (_, i) => ({
+      id: `parent${i + 1}`,
+      username: `parent${i + 1}`,
+      name: `PName${i + 1}`,
+      surname: `PSurname${i + 1}`,
+      email: `parent${i + 1}@mail.com`,
+      phone: `093500000${i + 1}`,
+      address: `Parent Blvd ${i + 1}`,
+    }));
+    await prisma.parent.createMany({
+      data: parentsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Parents seeded.");
 
-  // ASSIGNMENT
-  for (let i = 1; i <= 10; i++) {
-    await prisma.assignment.create({
-      data: {
-        title: `Assignment ${i}`,
-        startDate: new Date(new Date().setHours(new Date().getHours() + 1)),
-        dueDate: new Date(new Date().setDate(new Date().getDate() + 1)),
-        lessonId: (i % 30) + 1,
-      },
+    console.log("⏳ Seeding students...");
+    const studentsData = Array.from({ length: 100 }, (_, i) => ({
+      id: `student${i + 1}`,
+      username: `student${i + 1}`,
+      name: `SName${i + 1}`,
+      surname: `SSurname${i + 1}`,
+      email: `student${i + 1}@mail.com`,
+      phone: `093600000${i + 1}`,
+      address: `Student Ave ${i + 1}`,
+      bloodType: "O+",
+      sex: (i + 1) % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
+      birthday: new Date(2010 + ((i + 1) % 5), 0, 1),
+      createdAt: new Date(),
+      parentId: `parent${((i + 1) % 30) + 1}`,
+      gradeId: ((i + 1) % 6) + 1,
+      classId: ((i + 1) % 6) + 1,
+    }));
+    await prisma.student.createMany({
+      data: studentsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Students seeded.");
 
-  // RESULT
-  for (let i = 1; i <= 10; i++) {
-    await prisma.result.create({
-      data: {
-        score: 90,
-        studentId: `student${i}`,
-        ...(i <= 5 ? { examId: i } : { assignmentId: i - 5 }),
-      },
+    console.log("⏳ Seeding exams...");
+    const examsData = Array.from({ length: 30 }, (_, i) => ({
+      title: `Exam ${i + 1}`,
+      startTime: new Date(),
+      endTime: new Date(new Date().getTime() + 60 * 60 * 1000),
+      lessonId: ((i + 1) % 60) + 1,
+    }));
+    await prisma.exam.createMany({
+      data: examsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Exams seeded.");
 
-  // ATTENDANCE
-  for (let i = 1; i <= 10; i++) {
-    await prisma.attendance.create({
-      data: {
-        date: new Date(),
-        present: true,
-        studentId: `student${i}`,
-        lessonId: (i % 30) + 1,
-      },
+    console.log("⏳ Seeding assignments...");
+    const assignmentsData = Array.from({ length: 30 }, (_, i) => ({
+      title: `Assignment ${i + 1}`,
+      startDate: new Date(),
+      dueDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000),
+      lessonId: ((i + 1) % 60) + 1,
+    }));
+    await prisma.assignment.createMany({
+      data: assignmentsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Assignments seeded.");
 
-  // EVENT
-  for (let i = 1; i <= 5; i++) {
-    await prisma.event.create({
-      data: {
-        title: `Event ${i}`,
-        description: `Description for Event ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        classId: (i % 5) + 1,
-      },
+    console.log("⏳ Seeding results...");
+    for (let i = 1; i <= 100; i++) {
+      await prisma.result.create({
+        data: {
+          score: Math.floor(Math.random() * 41) + 60,
+          studentId: `student${(i % 100) + 1}`,
+          ...(i <= 50
+            ? { examId: (i % 30) + 1 }
+            : { assignmentId: (i % 30) + 1 }),
+        },
+      });
+    }
+    console.log("✅ Results seeded.");
+
+    console.log("⏳ Seeding attendances...");
+    for (let i = 1; i <= 150; i++) {
+      await prisma.attendance.create({
+        data: {
+          date: new Date(),
+          present: i % 5 !== 0,
+          studentId: `student${(i % 100) + 1}`,
+          lessonId: (i % 60) + 1,
+        },
+      });
+    }
+    console.log("✅ Attendances seeded.");
+
+    console.log("⏳ Seeding events...");
+    const eventsData = Array.from({ length: 10 }, (_, i) => ({
+      title: `Event ${i + 1}`,
+      description: `School Event ${i + 1} description.`,
+      startTime: new Date(),
+      endTime: new Date(new Date().getTime() + 2 * 60 * 60 * 1000),
+      classId: ((i + 1) % 6) + 1,
+    }));
+    await prisma.event.createMany({
+      data: eventsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Events seeded.");
 
-  // ANNOUNCEMENT
-  for (let i = 1; i <= 5; i++) {
-    await prisma.announcement.create({
-      data: {
-        title: `Announcement ${i}`,
-        description: `Description for Announcement ${i}`,
-        date: new Date(),
-        classId: (i % 5) + 1,
-      },
+    console.log("⏳ Seeding announcements...");
+    const announcementsData = Array.from({ length: 10 }, (_, i) => ({
+      title: `Announcement ${i + 1}`,
+      description: `Important notice ${i + 1}`,
+      date: new Date(),
+      classId: ((i + 1) % 6) + 1,
+    }));
+    await prisma.announcement.createMany({
+      data: announcementsData,
+      skipDuplicates: true,
     });
-  }
+    console.log("✅ Announcements seeded.");
 
-  console.log("Seeding completed successfully.");
+    console.log("🎉 All seeding done!");
+  } catch (err) {
+    console.error("❌ Error during seeding:", err);
+    throw err;
+  }
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
+  .then(() => prisma.$disconnect())
+  .catch(async (err) => {
+    console.error("❌ Unhandled seeding error:", err);
     await prisma.$disconnect();
     process.exit(1);
   });
