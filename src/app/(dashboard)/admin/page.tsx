@@ -39,7 +39,7 @@ const AdminPage = ({
       </div>
       {/* RIGHT */}
       <div className="w-full lg:w-1/3 flex flex-col gap-8">
-        <EventCalendarContainer searchParams={searchParams} />
+        <EventCalendarContainer searchParams={searchParams}/>
         <Announcements />
       </div>
     </div>
