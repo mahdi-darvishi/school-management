@@ -10,6 +10,7 @@ const CountChartContainer = async () => {
 
   const boys = data.find((d) => d.sex === "MALE")?._count || 0;
   const girls = data.find((d) => d.sex === "FEMALE")?._count || 0;
+
   return (
     <div className="bg-white rounded-xl w-full h-full p-4">
       {/* TITLE */}
@@ -18,9 +19,7 @@ const CountChartContainer = async () => {
         <Image src="/moreDark.png" alt="" width={20} height={20} />
       </div>
       {/* CHART */}
-
       <CountChart boys={boys} girls={girls} />
-
       {/* BOTTOM */}
       <div className="flex justify-center gap-16">
         <div className="flex flex-col gap-1">
