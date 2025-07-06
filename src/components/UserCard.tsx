@@ -12,6 +12,7 @@ const UserCard = async ({
     student: prisma.student,
     parent: prisma.parent,
   };
+
   const data = await modelMap[type].count();
 
   return (
