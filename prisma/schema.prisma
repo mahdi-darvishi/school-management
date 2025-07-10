@@ -186,6 +186,8 @@ enum UserSex {
 }
 
 enum Day {
+  SATURDAY
+  SUNDAY
   MONDAY
   TUESDAY
   WEDNESDAY
