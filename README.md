@@ -18,7 +18,7 @@ npm run dev
 - Tailwind CSS
 ```
 
-### user name and password 
+### Username and Password 
 
  admin - admin 
  
