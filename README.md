@@ -20,10 +20,13 @@ npm run dev
 
 ### user name and password 
 
-admin - admin
-teacher - teacher
-student - student
-parent - parent
+ admin - admin 
+ 
+ teacher - teacher
+ 
+ student - student
+ 
+ parent - parent
 
 
 ## Live Demo
