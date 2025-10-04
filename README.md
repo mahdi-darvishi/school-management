@@ -18,6 +18,14 @@ npm run dev
 - Tailwind CSS
 ```
 
+### user name and password 
+
+admin - admin
+teacher - teacher
+student - student
+parent - parent
+
+
 ## Live Demo
 
 The project is available online:  
