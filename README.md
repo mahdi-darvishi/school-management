@@ -1,19 +1,35 @@
-# School Management Dashboard
+# School Management
 
-## Getting Started
 
-First, run the development server:
 
-```bash
+## How to Run
+
+To run the project, follow these steps:
+
+```sh
+npm i
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Technologies Used
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+- Next.js
+- Tailwind CSS
+```
+
+### Username and Password 
+
+ admin - admin 
+ 
+ teacher - teacher
+ 
+ student - student
+ 
+ parent - parent
+
+
+## Live Demo
+
+The project is available online:  
+[View Project](https://school-management-gamma-eight.vercel.app/)
