@@ -8,6 +8,8 @@ type InputFieldProps = {
   defaultValue?: string;
   error?: FieldError;
   hidden?: boolean;
+  readOnly?: boolean;
+  className?: string;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
 };
 
@@ -20,14 +22,18 @@ const InputField = ({
   error,
   hidden,
   inputProps,
+  className,
+  readOnly,
 }: InputFieldProps) => {
   return (
     <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full md:w-1/4"}>
       <label className="text-xs text-gray-500">{label}</label>
       <input
+        readOnly={readOnly}
         type={type}
+        max={type === "number" ? 100 : null}
         {...register(name)}
-        className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+        className={`${className} ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full`}
         {...inputProps}
         defaultValue={defaultValue}
       />
