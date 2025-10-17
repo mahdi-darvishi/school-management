@@ -87,3 +87,23 @@ export const examSchema = z.object({
 });
 
 export type ExamSchema = z.infer<typeof examSchema>;
+
+export const resultSchema = z.object({
+  id: z.coerce.number().optional(),
+  score: z.coerce
+    .number({
+      required_error: "Score is required.",
+      invalid_type_error: "Score must be a number.",
+    })
+    .min(0, { message: "Score cannot be less than 0." })
+    .max(100, { message: "Score cannot be greater than 100." }),
+  studentId: z.string().min(1, { message: "Please select a student." }),
+  assessmentId: z
+    .string()
+    .min(1, { message: "Please select an assessment." })
+    .regex(/^(exam|assignment)-\d+$/, {
+      message: "Invalid assessment format.",
+    }),
+});
+
+export type ResultSchema = z.infer<typeof resultSchema>;

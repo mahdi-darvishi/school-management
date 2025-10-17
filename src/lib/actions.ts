@@ -4,6 +4,7 @@ import { clerkClient as getClerkClient } from "@clerk/nextjs/server";
 import {
   ClassSchema,
   ExamSchema,
+  ResultSchema,
   StudentSchema,
   SubjectSchema,
   TeacherSchema,
@@ -62,6 +63,7 @@ export const deleteSubject = async (
   data: FormData
 ) => {
   const id = data.get("id") as string;
+
   try {
     await prisma.subject.delete({
       where: {
@@ -401,6 +403,197 @@ export const deleteExam = async (
       where: {
         id: parseInt(id),
       },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+export const deleteParent = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.parent.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteLesson = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.lesson.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+export const deleteAssignment = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.assignment.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+export const deleteResult = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.result.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteAttendance = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.attendance.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteEvent = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.event.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+export const deleteAnnouncement = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+
+  try {
+    await prisma.announcement.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const createResult = async (
+  currentState: CurrentState,
+  data: ResultSchema
+) => {
+  try {
+    // assessmentId را تجزیه می‌کنیم (مثال: "exam-12")
+    const [type, idStr] = data.assessmentId.split("-");
+    const id = parseInt(idStr, 10);
+
+    // مشخص می‌کنیم که نتیجه برای امتحان است یا تکلیف
+    const resultData = {
+      score: data.score,
+      studentId: data.studentId,
+      examId: type === "exam" ? id : null,
+      assignmentId: type === "assignment" ? id : null,
+    };
+
+    await prisma.result.create({
+      data: resultData,
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const updateResult = async (
+  currentState: CurrentState,
+  data: ResultSchema
+) => {
+  try {
+    const [type, idStr] = data.assessmentId.split("-");
+    const id = parseInt(idStr, 10);
+
+    const resultData = {
+      score: data.score,
+      studentId: data.studentId,
+      examId: type === "exam" ? id : null,
+      assignmentId: type === "assignment" ? id : null,
+    };
+
+    await prisma.result.update({
+      where: { id: data.id! }, // علامت ! یعنی مطمئنیم که در حالت آپدیت، id وجود دارد
+      data: resultData,
     });
 
     return { success: true, error: false };

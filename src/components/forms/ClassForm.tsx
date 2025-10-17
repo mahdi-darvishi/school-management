@@ -50,7 +50,6 @@ const ClassForm = ({
   );
 
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
     formAction(data);
   });
 
@@ -58,7 +57,7 @@ const ClassForm = ({
 
   useEffect(() => {
     if (state.success) {
-      toast(`Subject has been ${type === "create" ? "created" : "updated"}!`);
+      toast(`Class has been ${type === "create" ? "created" : "updated"}!`);
       setOpen(false);
       router.refresh();
     }
@@ -101,7 +100,7 @@ const ClassForm = ({
           <select
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
             {...register("supervisorId")}
-            defaultValue={data?.teachers}
+            defaultValue={data?.supervisorId}
           >
             {teachers.map(
               (teacher: { id: string; name: string; surname: string }) => (
@@ -129,11 +128,7 @@ const ClassForm = ({
             defaultValue={data?.gradeId}
           >
             {grades.map((grade: { id: number; level: number }) => (
-              <option
-                value={grade.id}
-                key={grade.id}
-                selected={data && grade.id === data.gradeId}
-              >
+              <option value={grade.id} key={grade.id}>
                 {grade.level}
               </option>
             ))}
